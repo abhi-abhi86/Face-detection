@@ -34,8 +34,8 @@ README.md         # Project documentation
 
 1.  Clone the repo:
     ```bash
-    git clone https://github.com/Darshan-CodeCrafter/disease-detection.git
-    cd disease-detection
+   [ git clone https://github.com/Darshan-CodeCrafter/disease-detection.git
+    cd disease-detection](https://github.com/Darshan-CodeCrafter/Face-detection.git)
     ```
 2.  Install dependencies:
     ```bash
