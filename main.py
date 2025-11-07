@@ -52,19 +52,22 @@ class Backend:
 
     def _load_emotion_model(self):
         """
-        Load emotion detection model. 
-        
-        INSTRUCTIONS FOR EMOTION MODEL:
-        For a more accurate emotion detection, you can download a pre-trained emotion model:
-        1. Download emotion detection model (e.g., FER2013 trained model)
-        2. Place the model files in opencv_data/emotion_model/ directory
-        3. Update this method to load your specific model
-        
-        Current implementation uses a simple OpenCV-based approach for basic emotion detection.
+        Load emotion detection model using ONNX format.
+        Assumes emotion-ferplus-8.onnx and emotion_labels.txt are in opencv_data/emotion_model/
         """
-        # For now, we'll use a simple rule-based approach
-        # In a production setup, you would load a pre-trained emotion model here
-        return None
+        try:
+            model_path = os.path.join(C.EMOTION_MODEL_DIR, "emotion-ferplus-8.onnx")
+            labels_path = os.path.join(C.EMOTION_MODEL_DIR, "emotion_labels.txt")
+            if not os.path.exists(model_path):
+                print("Warning: Emotion model file not found. Using heuristic detection.")
+                return None
+            net = cv2.dnn.readNetFromONNX(model_path)
+            with open(labels_path, 'r') as f:
+                labels = [line.strip() for line in f.readlines()]
+            return net, labels
+        except Exception as e:
+            print(f"Warning: Could not load emotion model. Error: {e}. Using heuristic detection.")
+            return None
 
     def load_labels(self):
         try:
@@ -126,58 +129,42 @@ class Backend:
 
     def detect_emotion(self, face_img):
         """
-        Simple emotion detection based on facial features analysis.
-        
-        For more accurate results, replace this with a pre-trained emotion detection model:
-        1. Download FER2013 or similar emotion dataset trained model
-        2. Use cv2.dnn.readNetFromTensorflow() or cv2.dnn.readNetFromONNX()
-        3. Process the face image through the model
-        4. Return the predicted emotion from C.EMOTION_LABELS
-        
-        Current implementation uses basic image analysis as a demonstration.
+        Detect emotion using pre-trained ONNX model if available, else heuristic.
         """
         if face_img is None or face_img.size == 0:
             return "Unknown"
-        
+
         try:
-            # Convert to grayscale for analysis
-            if len(face_img.shape) == 3:
-                gray_face = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+            if self.emotion_net is not None:
+                net, labels = self.emotion_net
+                # Preprocess face for model input
+                gray_face = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY) if len(face_img.shape) == 3 else face_img
+                resized_face = cv2.resize(gray_face, (64, 64))  # Assuming model expects 64x64
+                blob = cv2.dnn.blobFromImage(resized_face, 1.0, (64, 64), (0, 0, 0), swapRB=False)
+                net.setInput(blob)
+                output = net.forward()
+                emotion_idx = np.argmax(output)
+                return labels[emotion_idx] if emotion_idx < len(labels) else "Unknown"
             else:
-                gray_face = face_img
-            
-            # Resize for consistent analysis
-            resized_face = cv2.resize(gray_face, (48, 48))
-            
-            # Simple emotion detection based on basic facial features
-            # This is a simplified approach - in production, use a trained model
-            
-            # Calculate basic statistics
-            mean_intensity = np.mean(resized_face)
-            std_intensity = np.std(resized_face)
-            
-            # Detect basic features for emotion estimation
-            # This is a very simplified approach for demonstration
-            
-            # Check for smile-like features (higher intensity in lower face region)
-            lower_face = resized_face[32:48, :]
-            upper_face = resized_face[0:16, :]
-            
-            lower_mean = np.mean(lower_face)
-            upper_mean = np.mean(upper_face)
-            
-            # Simple heuristic-based emotion detection
-            if lower_mean > upper_mean * 1.1 and std_intensity > 20:
-                return "Happy"
-            elif std_intensity < 15 and mean_intensity > 120:
-                return "Neutral"
-            elif mean_intensity < 100:
-                return "Sad"
-            elif std_intensity > 30:
-                return "Surprise"
-            else:
-                return "Neutral"
-                
+                # Fallback to heuristic
+                gray_face = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY) if len(face_img.shape) == 3 else face_img
+                resized_face = cv2.resize(gray_face, (48, 48))
+                mean_intensity = np.mean(resized_face)
+                std_intensity = np.std(resized_face)
+                lower_face = resized_face[32:48, :]
+                upper_face = resized_face[0:16, :]
+                lower_mean = np.mean(lower_face)
+                upper_mean = np.mean(upper_face)
+                if lower_mean > upper_mean * 1.1 and std_intensity > 20:
+                    return "Happy"
+                elif std_intensity < 15 and mean_intensity > 120:
+                    return "Neutral"
+                elif mean_intensity < 100:
+                    return "Sad"
+                elif std_intensity > 30:
+                    return "Surprise"
+                else:
+                    return "Neutral"
         except Exception as e:
             print(f"Emotion detection error: {e}")
             return "Unknown"

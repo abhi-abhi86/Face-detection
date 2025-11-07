@@ -1,39 +1,65 @@
-# Face Project
+# VisionAI - Secure Face Recognition
 
-This repository contains code for face-related tasks such as face detection, recognition, and model training.
+This repository contains a desktop application for real-time face recognition, age estimation, and emotion detection, built with PySide6 and OpenCV.
+
+## Features
+
+- **Real-time Recognition**: Detects and recognizes faces from a live webcam feed.
+- **User Management**: A graphical user interface to add, update, and delete users for face recognition.
+- **Model Training**: Train the face recognition model with the collected user faces.
+- **Age and Emotion Detection**: Estimates the age and detects the emotion of the person in front of the camera.
 
 ## Project Structure
 
 ```
-data/             # Datasets and input images
-src/              # Source code
-models/           # Saved models
-tests/            # Test scripts
+opencv_data/      # Datasets, models, and trained data
+├── age_model/
+├── emotion_model/
+└── faces/
+main.py           # Main application script
 requirements.txt  # Python dependencies
 README.md         # Project documentation
+...
 ```
 
 ## Getting Started
 
-1. Clone the repo:
+### Prerequisites
+
+- Python 3.x
+- OpenCV
+- PySide6
+
+### Installation
+
+1.  Clone the repo:
     ```bash
-    git clone https://github.com/abhi-abhi86/face.git
-    cd face
+    git clone https://github.com/Darshan-CodeCrafter/disease-detection.git
+    cd disease-detection
     ```
-2. Install dependencies:
+2.  Install dependencies:
     ```bash
     pip install -r requirements.txt
     ```
-3. Run the main script or your experiments:
+
+### Running the Application
+
+1.  Run the main script:
     ```bash
-    python src/main.py
+    python main.py
     ```
+2.  **Manage Faces Tab**:
+    *   Add new users by entering a username and selecting an image with a clear face.
+    *   Train the model using the "Train Model" button. The model status will indicate if it's trained or needs training.
+3.  **Recognize Tab**:
+    *   Click "Start Recognition" to begin detecting and identifying faces from your webcam.
 
-## Features
+## Models Used
 
-- Face detection and recognition
-- Customizable models
-- Utilities for image preprocessing
+-   **Face Detection**: Haar Cascade Classifier.
+-   **Face Recognition**: Local Binary Patterns Histograms (LBPH).
+-   **Age Detection**: A pre-trained Caffe model.
+-   **Emotion Detection**: A pre-trained ONNX model.
 
 ## Contributing
 
@@ -41,4 +67,4 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE.txt)
